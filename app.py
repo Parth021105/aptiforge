@@ -7,7 +7,12 @@ import os
 import json
 
 def create_app():
-    app = Flask(__name__, static_folder='static', template_folder='templates')
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app = Flask(
+        __name__,
+        static_folder=os.path.join(basedir, 'static'),
+        template_folder=os.path.join(basedir, 'templates')
+    )
     app.config.from_object(Config)
     init_db(app)
 
