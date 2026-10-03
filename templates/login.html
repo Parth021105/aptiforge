@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — AptiForge Platform{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: center; min-height: 75vh;">
+  <div class="card" style="width: 100%; max-width: 460px; padding: 32px;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div class="brand-icon" style="margin: 0 auto 12px auto; width: 48px; height: 48px; font-size: 24px;">⚡</div>
+      <h2 style="font-size: 24px; font-weight: 800;">Welcome to AptiForge</h2>
+      <p class="page-subtitle">AI-Driven Aptitude Practice & Assessment Portal</p>
+    </div>
+
+    <!-- Tab Switcher -->
+    <div style="display: flex; background: rgba(7, 11, 20, 0.6); padding: 4px; border-radius: 10px; margin-bottom: 24px; border: 1px solid var(--border-color);">
+      <button id="tab-login" class="btn btn-ghost" style="flex: 1; border-radius: 8px; font-size: 13px;" onclick="showLogin()">Sign In</button>
+      <button id="tab-register" class="btn btn-ghost" style="flex: 1; border-radius: 8px; font-size: 13px;" onclick="showRegister()">Register</button>
+    </div>
+
+    <!-- Alert Box -->
+    <div id="auth-alert" style="display: none; padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 18px;"></div>
+
+    <!-- Login Form -->
+    <form id="form-login" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input id="login-email" type="email" class="input" placeholder="e.g. aarav.sharma@example.com" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="login-password" type="password" class="input" placeholder="••••••••" required />
+      </div>
+
+      <button type="submit" id="btn-login" class="btn" style="width: 100%; margin-top: 8px;">
+        Sign In to Portal ➔
+      </button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="form-register" style="display: none;" onsubmit="doRegister(event)">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input id="reg-name" type="text" class="input" placeholder="e.g. Aarav Sharma" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input id="reg-email" type="email" class="input" placeholder="e.g. aarav.sharma@example.com" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="reg-password" type="password" class="input" placeholder="••••••••" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Account Role</label>
+        <select id="reg-role" class="select">
+          <option value="student">Student / Candidate</option>
+          <option value="faculty">Faculty / Instructor</option>
+          <option value="admin">Platform Administrator</option>
+        </select>
+      </div>
+
+      <button type="submit" id="btn-register" class="btn" style="width: 100%; margin-top: 8px;">
+        Create Account ➔
+      </button>
+    </form>
+
+    <!-- Quick Demo Accounts for Presentation Review -->
+    <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-color); text-align: center;">
+      <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">⚡ 1-Click Demo Login</p>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="fillDemo('student@aptiforge.com', 'password123')">👨‍🎓 Student</button>
+        <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="fillDemo('faculty@aptiforge.com', 'faculty123')">👨‍🏫 Faculty</button>
+        <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="fillDemo('admin@aptiforge.com', 'admin123')">🛡️ Admin</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function showAlert(msg, isSuccess = false) {
+    const alertEl = document.getElementById('auth-alert');
+    alertEl.style.display = 'block';
+    alertEl.style.background = isSuccess ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+    alertEl.style.border = isSuccess ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(244, 63, 94, 0.3)';
+    alertEl.style.color = isSuccess ? '#34d399' : '#fb7185';
+    alertEl.textContent = msg;
+  }
+
+  function showLogin() {
+    document.getElementById('form-register').style.display = 'none';
+    document.getElementById('form-login').style.display = 'block';
+    document.getElementById('tab-login').style.background = 'rgba(56, 189, 248, 0.15)';
+    document.getElementById('tab-login').style.color = 'var(--accent-cyan)';
+    document.getElementById('tab-register').style.background = 'transparent';
+    document.getElementById('tab-register').style.color = 'var(--text-muted)';
+  }
+
+  function showRegister() {
+    document.getElementById('form-login').style.display = 'none';
+    document.getElementById('form-register').style.display = 'block';
+    document.getElementById('tab-register').style.background = 'rgba(56, 189, 248, 0.15)';
+    document.getElementById('tab-register').style.color = 'var(--accent-cyan)';
+    document.getElementById('tab-login').style.background = 'transparent';
+    document.getElementById('tab-login').style.color = 'var(--text-muted)';
+  }
+
+  function fillDemo(email, pass) {
+    showLogin();
+    document.getElementById('login-email').value = email;
+    document.getElementById('login-password').value = pass;
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('btn-login');
+
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email, password})
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showAlert('Login successful! Redirecting...', true);
+        setTimeout(() => location.href = data.redirect || '/dashboard', 600);
+      } else {
+        showAlert(data.error || 'Invalid credentials');
+      }
+    } catch (err) {
+      showAlert('Network error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In to Portal ➔';
+    }
+  }
+
+  async function doRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    const role = document.getElementById('reg-role').value;
+    const btn = document.getElementById('btn-register');
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name, email, password, role})
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showAlert('Account created! Please sign in.', true);
+        showLogin();
+        document.getElementById('login-email').value = email;
+      } else {
+        showAlert(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      showAlert('Network error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Account ➔';
+    }
+  }
+
+  // Handle URL query ?register=1
+  if (new URLSearchParams(window.location.search).get('register')) {
+    showRegister();
+  } else {
+    showLogin();
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Command Center — AptiForge{% endblock %}
+
+{% block content %}
+<!-- Top Header & Actions -->
+<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+      <span style="background: #ff375f; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px;">ADMIN PRIVILEGES</span>
+      <h2 style="font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">System Command Center</h2>
+    </div>
+    <p style="font-size: 13px; color: var(--text-muted);">
+      Centralized administrative operations: question bank curation, progressive hint auditing, mock test authoring, and student performance oversight.
+    </p>
+  </div>
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <button class="btn btn-secondary" onclick="seedSampleQuestions()">🌱 Re-seed Complete Bank</button>
+    <button class="btn" style="background: #38bdf8; color: #141414; font-weight: 700;" onclick="showAdminSection('upload')">📄 Upload Question Paper (PDF)</button>
+    <button class="btn" style="background: #ffa116; color: #141414; font-weight: 700;" onclick="openAddQuestionModal()">+ Add New Question</button>
+  </div>
+</div>
+
+<!-- Live System KPIs (Dedicated to Admin) -->
+<div class="grid-4" style="margin-bottom: 24px;">
+  <div class="stat-card" style="border-left: 4px solid #38bdf8;">
+    <div class="stat-icon" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8;">👨‍🎓</div>
+    <div>
+      <div class="stat-value" id="kpi-students">{{ admin_stats.total_students if admin_stats else 0 }}</div>
+      <div class="stat-label">Enrolled Students</div>
+    </div>
+  </div>
+
+  <div class="stat-card" style="border-left: 4px solid #ffa116;">
+    <div class="stat-icon" style="background: rgba(255, 161, 22, 0.12); color: #ffa116;">📚</div>
+    <div>
+      <div class="stat-value" id="kpi-questions">{{ admin_stats.total_questions if admin_stats else 0 }}</div>
+      <div class="stat-label">Total Questions</div>
+    </div>
+  </div>
+
+  <div class="stat-card" style="border-left: 4px solid #00b8a3;">
+    <div class="stat-icon" style="background: rgba(0, 184, 163, 0.12); color: #00b8a3;">📝</div>
+    <div>
+      <div class="stat-value" id="kpi-exams">{{ admin_stats.total_exams if admin_stats else 0 }}</div>
+      <div class="stat-label">Active Mock Tests</div>
+    </div>
+  </div>
+
+  <div class="stat-card" style="border-left: 4px solid #c084fc;">
+    <div class="stat-icon" style="background: rgba(192, 132, 252, 0.12); color: #c084fc;">🏆</div>
+    <div>
+      <div class="stat-value" id="kpi-attempts">{{ admin_stats.total_attempts if admin_stats else 0 }}</div>
+      <div class="stat-label">Test Submissions</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab Navigation -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #333333; padding-bottom: 12px; overflow-x: auto;">
+  <button class="lc-panel-tab active" id="tab-btn-questions" onclick="showAdminSection('questions')" style="font-size: 14px; padding: 8px 18px;">
+    📚 Question Bank Manager
+  </button>
+  <button class="lc-panel-tab" id="tab-btn-upload" onclick="showAdminSection('upload')" style="font-size: 14px; padding: 8px 18px;">
+    📄 Faculty Question Upload (.PDF / .JSON / .CSV)
+  </button>
+  <button class="lc-panel-tab" id="tab-btn-exam" onclick="showAdminSection('exam')" style="font-size: 14px; padding: 8px 18px;">
+    📝 Mock Exam Orchestrator
+  </button>
+  <button class="lc-panel-tab" id="tab-btn-roster" onclick="showAdminSection('roster')" style="font-size: 14px; padding: 8px 18px;">
+    📊 Student Performance Gradebook
+  </button>
+</div>
+
+<!-- =========================================================================
+     SECTION 1: Question Bank Manager with Search, Filters & Inspect Modal
+     ========================================================================= -->
+<div id="admin-sec-questions">
+  <div class="card" style="background: #1e1e1e; border: 1px solid #333333; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
+      <div>
+        <h3 style="font-size: 17px; font-weight: 700; color: #ffffff;">Question Repository (<span id="total-q-count">0</span> items)</h3>
+        <p style="font-size: 12px; color: #9ca3af;">Search question statements or filter by category and difficulty.</p>
+      </div>
+
+      <!-- Search & Filters -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <input type="text" id="admin-search-input" class="input" placeholder="🔍 Search question statement..." style="width: 240px; font-size: 13px; padding: 7px 12px;" oninput="debounceAdminSearch()" />
+        
+        <select id="admin-topic-filter" class="select" style="width: auto; font-size: 13px; padding: 7px 12px;" onchange="loadAdminQuestions()">
+          <option value="all">All Topics</option>
+          <option value="Quantitative">Quantitative</option>
+          <option value="Logical Reasoning">Logical Reasoning</option>
+          <option value="Verbal Ability">Verbal Ability</option>
+          <option value="Data Interpretation">Data Interpretation</option>
+        </select>
+
+        <select id="admin-diff-filter" class="select" style="width: auto; font-size: 13px; padding: 7px 12px;" onchange="loadAdminQuestions()">
+          <option value="all">All Difficulties</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container" style="border: 1px solid #2e2e2e; border-radius: 8px;">
+      <table class="table" style="margin-bottom: 0;">
+        <thead style="background: #262626;">
+          <tr>
+            <th style="width: 40%;">Question Statement</th>
+            <th>Category</th>
+            <th>Difficulty</th>
+            <th>Answer</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="admin-questions-tbody">
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading question repository...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     SECTION 2: Faculty PDF & Bulk File Upload
+     ========================================================================= -->
+<div id="admin-sec-upload" style="display: none;">
+  <div class="card" style="background: #1e1e1e; border: 1px solid #333333; max-width: 760px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+      <h3 style="font-size: 18px; font-weight: 700; color: #ffffff;">Faculty Question Ingestion & PDF Parser</h3>
+      <span class="badge badge-easy" style="font-size: 11px;">PDF • CSV • JSON Supported</span>
+    </div>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+      Faculty can upload question papers directly in <strong>PDF</strong> format, or datasets in <strong>JSON / CSV</strong> format. Our automated parser extracts question statements, options (A, B, C, D), answer keys, and explanations automatically into the live question bank.
+    </p>
+
+    <!-- PDF Formatting Guide -->
+    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+      <div style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 6px;">💡 Standard Question Paper Format in PDF:</div>
+      <pre style="background: #141414; color: #e5e7eb; font-size: 12px; padding: 10px; border-radius: 6px; overflow-x: auto; margin-bottom: 0; line-height: 1.5; font-family: 'JetBrains Mono', monospace;">1. A train running at 60 km/hr crosses a pole in 9 seconds. What is the length of the train?
+   A) 120 metres
+   B) 180 metres
+   C) 150 metres
+   D) 324 metres
+Answer: C
+Explanation: Speed = 60 * (5/18) m/sec = 50/3 m/sec. Length = (50/3) * 9 = 150 metres.</pre>
+    </div>
+
+    <form id="upload-form">
+      <div class="grid-2" style="margin-bottom: 16px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Category / Primary Topic (Fallback)</label>
+          <select id="upload-topic" class="select">
+            <option value="Quantitative">Quantitative Aptitude</option>
+            <option value="Logical Reasoning">Logical Reasoning</option>
+            <option value="Verbal Ability">Verbal Ability</option>
+            <option value="Data Interpretation">Data Interpretation</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Default Difficulty (if not specified)</label>
+          <select id="upload-difficulty" class="select">
+            <option value="medium">🟡 Medium (Placement Standard)</option>
+            <option value="easy">🟢 Easy (Foundational)</option>
+            <option value="hard">🔴 Hard (Advanced Screening)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="border: 2px dashed #ffa116; padding: 32px 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; background: rgba(255, 161, 22, 0.03);">
+        <div style="font-size: 42px; margin-bottom: 10px;">📄</div>
+        <input type="file" id="file" accept=".pdf,.json,.csv" style="display: none;" onchange="updateFileName(this)" />
+        <label for="file" class="btn" style="background: #ffa116; color: #141414; font-weight: 700; cursor: pointer; font-size: 13px;">Choose .PDF, .JSON or .CSV File</label>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">Upload question paper PDF, JSON, or CSV file</p>
+        <div id="selected-file-name" style="margin-top: 12px; font-size: 13px; color: #38bdf8; font-weight: 600;"></div>
+      </div>
+
+      <button type="submit" id="upload-btn" class="btn" style="width: 100%; background: #ffa116; color: #141414; font-weight: 800; font-size: 14px; padding: 12px;">
+        Upload & Extract Questions ➔
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================================
+     SECTION 3: Create Mock Exam Wizard
+     ========================================================================= -->
+<div id="admin-sec-exam" style="display: none;">
+  <div class="card" style="background: #1e1e1e; border: 1px solid #333333; max-width: 820px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <h3 style="font-size: 18px; font-weight: 700; color: #ffffff;">Mock Test Orchestrator</h3>
+      <button class="btn btn-secondary btn-sm" onclick="generateDemoExams()">⚡ Reset 12 Placement Mocks</button>
+    </div>
+    
+    <form id="create-exam-form" onsubmit="handleCreateExam(event)">
+      <div class="form-group">
+        <label class="form-label">Exam Title</label>
+        <input type="text" id="exam-title" class="input" placeholder="e.g. TCS NQT Quantitative Sprint 2026" required />
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Duration (Minutes)</label>
+          <input type="number" id="exam-duration" class="input" value="20" min="5" max="180" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">AI Hints Policy</label>
+          <select id="exam-hints-toggle" class="select">
+            <option value="true">Enable 3-Level Hints (Interactive Practice Exam)</option>
+            <option value="false">Disable Hints (Strict Placement Mode)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label class="form-label" style="margin-bottom: 0;">Select Questions for Test</label>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="selectFirst20Questions()" style="font-size: 11px;">Select First 20</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllQuestions(true)" style="font-size: 11px;">Select All</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="selectAllQuestions(false)" style="font-size: 11px;">Clear</button>
+          </div>
+        </div>
+        <div style="max-height: 280px; overflow-y: auto; border: 1px solid #333333; border-radius: 8px; padding: 12px; background: #181818;" id="exam-questions-selector">
+          <!-- Dynamic question checkboxes -->
+        </div>
+      </div>
+
+      <button type="submit" class="btn" style="width: 100%; margin-top: 12px; background: #ffa116; color: #141414; font-weight: 700;">
+        Publish & Deploy Mock Exam ➔
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================================
+     SECTION 4: Student Performance Roster & Scorecards
+     ========================================================================= -->
+<div id="admin-sec-roster" style="display: none;">
+  <div class="card" style="background: #1e1e1e; border: 1px solid #333333;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <div>
+        <h3 style="font-size: 18px; font-weight: 700; color: #ffffff;">Student Test Performance Gradebook</h3>
+        <p style="font-size: 12px; color: #9ca3af;">Audit comprehensive test results across all student accounts.</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadStudentRoster()">🔄 Refresh Roster</button>
+    </div>
+
+    <div class="table-container" style="border: 1px solid #2e2e2e; border-radius: 8px;">
+      <table class="table" style="margin-bottom: 0;">
+        <thead style="background: #262626;">
+          <tr>
+            <th>Student</th>
+            <th>Email</th>
+            <th>Exam Title</th>
+            <th>Score</th>
+            <th>Correct / Total</th>
+            <th>Date</th>
+            <th style="text-align: right;">Scorecard</th>
+          </tr>
+        </thead>
+        <tbody id="admin-roster-tbody">
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading student roster...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MODAL 1: Add New Question
+     ========================================================================= -->
+<div id="question-modal" class="apti-modal-backdrop" style="display: none;">
+  <div class="apti-modal">
+    <div class="apti-modal-header">
+      <h3>Add New Question to Question Bank</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeAddQuestionModal()">✕</button>
+    </div>
+
+    <div class="apti-modal-body">
+      <form onsubmit="handleSaveQuestion(event)">
+        <div class="form-group">
+          <label class="form-label">Question Statement</label>
+          <textarea id="modal-q-text" class="textarea" rows="3" required placeholder="Enter mathematical or logical problem statement..."></textarea>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Topic / Category</label>
+            <select id="modal-q-topic" class="select">
+              <option value="Quantitative">Quantitative</option>
+              <option value="Logical Reasoning">Logical Reasoning</option>
+              <option value="Verbal Ability">Verbal Ability</option>
+              <option value="Data Interpretation">Data Interpretation</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Difficulty</label>
+            <select id="modal-q-diff" class="select">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Option Choices</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="modal-opt-0" class="input" placeholder="Option A" required />
+            <input type="text" id="modal-opt-1" class="input" placeholder="Option B" required />
+            <input type="text" id="modal-opt-2" class="input" placeholder="Option C" required />
+            <input type="text" id="modal-opt-3" class="input" placeholder="Option D" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Correct Option Index</label>
+          <select id="modal-correct-idx" class="select">
+            <option value="0">Option A</option>
+            <option value="1">Option B</option>
+            <option value="2">Option C</option>
+            <option value="3">Option D</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Level 1 Hint (Core Concept & Formula)</label>
+          <textarea id="modal-hint-1" class="textarea" rows="2" placeholder="Theoretical rule, formula, or property to recall..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Level 2 Hint (Detailed Equation Setup)</label>
+          <textarea id="modal-hint-2" class="textarea" rows="2" placeholder="Parameter identification and equation setup..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Level 3 Solution (Full Derivation)</label>
+          <textarea id="modal-explanation" class="textarea" rows="3" required placeholder="Step-by-step complete solution derivation..."></textarea>
+        </div>
+
+        <div class="apti-modal-footer" style="padding: 14px 0 0 0;">
+          <button type="button" class="btn btn-secondary" onclick="closeAddQuestionModal()">Cancel</button>
+          <button type="submit" class="btn" style="background: #ffa116; color: #141414; font-weight: 700;">Save & Publish Question</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     MODAL 2: Question Inspection & Pedagogical Audit Modal
+     ========================================================================= -->
+<div id="inspect-modal" class="apti-modal-backdrop" style="display: none;">
+  <div class="apti-modal">
+    <div class="apti-modal-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span id="inspect-diff-badge" class="lc-tag-medium">MEDIUM</span>
+        <h3 id="inspect-title" style="margin: 0;">Question Inspection</h3>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeInspectModal()">✕</button>
+    </div>
+
+    <div class="apti-modal-body" id="inspect-modal-content">
+      <!-- Dynamic detailed question view -->
+    </div>
+
+    <div class="apti-modal-footer">
+      <button class="btn btn-secondary" onclick="closeInspectModal()">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

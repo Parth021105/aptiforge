@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Practice Portal — AptiForge (LeetCode Style){% endblock %}
+
+{% block content %}
+<!-- Top Header & Difficulty Selector -->
+<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
+  <div>
+    <h2 style="font-size: 22px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 10px;">
+      <span style="background: #ffa116; color: #141414; padding: 2px 8px; border-radius: 6px; font-size: 14px; font-weight: 900;">LC</span>
+      AptiForge Problem Solving Arena
+    </h2>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+      Interactive competitive practice with pedagogical 3-level progressive hints and step-by-step verified derivations.
+    </p>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <button class="btn btn-secondary" style="font-size: 13px;" onclick="reloadRandom20Questions()">🔀 Pick Random Set</button>
+    <a href="/exam" class="btn" style="background: #ffa116; color: #141414; font-weight: 700; font-size: 13px;">⏱️ Timed Mock Exam</a>
+  </div>
+</div>
+
+<!-- Category Pills Bar -->
+<div class="topic-pills" id="topic-container" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 12px;">
+  <button class="topic-pill active" data-topic="all">All Topics</button>
+  <button class="topic-pill" data-topic="Quantitative">Quantitative</button>
+  <button class="topic-pill" data-topic="Logical Reasoning">Logical Reasoning</button>
+  <button class="topic-pill" data-topic="Verbal Ability">Verbal Ability</button>
+  <button class="topic-pill" data-topic="Data Interpretation">Data Interpretation</button>
+  <button class="topic-pill" data-topic="Profit & Loss">Profit & Loss</button>
+  <button class="topic-pill" data-topic="Time & Work">Time & Work</button>
+  <button class="topic-pill" data-topic="Time, Speed & Distance">Time & Distance</button>
+  <button class="topic-pill" data-topic="Numbers">Numbers</button>
+  <button class="topic-pill" data-topic="Probability">Probability</button>
+  <button class="topic-pill" data-topic="Syllogisms">Syllogisms</button>
+  <button class="topic-pill" data-topic="Blood Relations">Blood Relations</button>
+  <button class="topic-pill" data-topic="Seating Arrangement">Seating Arrangement</button>
+  <button class="topic-pill" data-topic="Reading Comprehension">Reading Comp</button>
+  <button class="topic-pill" data-topic="Sentence Correction">Sentence Correction</button>
+  <button class="topic-pill" data-topic="Table Chart">Table & Bar Charts</button>
+</div>
+
+<!-- Difficulty Selector & Quick Action Bar -->
+<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; background: #1e1e1e; padding: 10px 16px; border-radius: 10px; border: 1px solid #333333;">
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase;">Difficulty:</span>
+    <div style="display: flex; gap: 6px;" id="practice-difficulty-tabs">
+      <button class="topic-pill active" style="padding: 4px 12px; font-size: 12px;" data-diff="mixed" onclick="changePracticeDifficulty('mixed')">✨ Mixed (8E + 8M + 4H)</button>
+      <button class="topic-pill" style="padding: 4px 12px; font-size: 12px; color: #00b8a3;" data-diff="easy" onclick="changePracticeDifficulty('easy')">🟢 Easy</button>
+      <button class="topic-pill" style="padding: 4px 12px; font-size: 12px; color: #ffc01e;" data-diff="medium" onclick="changePracticeDifficulty('medium')">🟡 Medium</button>
+      <button class="topic-pill" style="padding: 4px 12px; font-size: 12px; color: #ff375f;" data-diff="hard" onclick="changePracticeDifficulty('hard')">🔴 Hard</button>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 14px;">
+    <div id="practice-timer-display" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #ffa116; background: #262626; padding: 4px 10px; border-radius: 6px; border: 1px solid #3d3d3d;">
+      ⏱️ 20:00
+    </div>
+    <span style="font-size: 13px; font-weight: 600; color: #9ca3af;" id="question-counter">Problem 1 of 20</span>
+    <div style="display: flex; gap: 4px;">
+      <button id="btn-prev" class="btn btn-secondary btn-sm" onclick="prevQuestion()" style="padding: 4px 10px;">◀ Prev</button>
+      <button id="btn-next" class="btn btn-secondary btn-sm" onclick="nextQuestion()" style="padding: 4px 10px;">Next ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden inputs for question tracking -->
+<input type="hidden" id="current-qid" value="">
+
+<!-- LeetCode Split-Screen Problem Workspace -->
+<div class="lc-workspace">
+  <!-- Left Panel: Problem Statement & Progressive Hints Accordions -->
+  <div class="lc-panel">
+    <div class="lc-panel-header">
+      <div class="lc-panel-tabs">
+        <button class="lc-panel-tab active" id="tab-desc" onclick="switchLeftTab('desc')">📄 Description</button>
+        <button class="lc-panel-tab" id="tab-hints" onclick="switchLeftTab('hints')">💡 Hints & Blueprint</button>
+        <button class="lc-panel-tab" id="tab-solution" onclick="switchLeftTab('solution')">🎓 Verified Solution</button>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="randomQuestion()" title="Pick random question from session">🔀 Random</button>
+    </div>
+
+    <div class="lc-panel-body">
+      <!-- Problem Metadata -->
+      <div class="lc-meta-row">
+        <span id="question-difficulty" class="lc-tag-medium">MEDIUM</span>
+        <span id="question-topic" class="lc-tag-topic">Quantitative</span>
+      </div>
+
+      <!-- Problem Title & Statement -->
+      <h3 class="lc-title" id="question-title-heading">Problem #1</h3>
+      <div class="lc-problem-content" id="question-text">
+        Loading problem statement...
+      </div>
+
+      <!-- Progressive LeetCode Hints Accordion Group -->
+      <div style="font-size: 13px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <span>✨</span> Progressive Hint System (Zero Spoiler Policy)
+      </div>
+
+      <div class="hint-accordion-group">
+        <!-- Accordion 1: Basic Concept -->
+        <div class="hint-accordion" id="acc-hint-1">
+          <div class="hint-accordion-header" onclick="toggleAccordion('acc-hint-1', 1)">
+            <div class="hint-badge">
+              <span style="color: #38bdf8;">💡</span>
+              <span>Hint 1: Core Mathematical Concept & Formulation</span>
+            </div>
+            <span class="hint-accordion-chevron">▼</span>
+          </div>
+          <div class="hint-accordion-body" id="acc-body-1">
+            Click to unlock the fundamental theoretical concept and formula.
+          </div>
+        </div>
+
+        <!-- Accordion 2: Detailed Framework -->
+        <div class="hint-accordion" id="acc-hint-2">
+          <div class="hint-accordion-header" onclick="toggleAccordion('acc-hint-2', 2)">
+            <div class="hint-badge">
+              <span style="color: #ffc01e;">🔍</span>
+              <span>Hint 2: Parameter Identification & Equation Setup</span>
+            </div>
+            <span class="hint-accordion-chevron">▼</span>
+          </div>
+          <div class="hint-accordion-body" id="acc-body-2">
+            Click to view parameter extraction and equation structure without the answer.
+          </div>
+        </div>
+
+        <!-- Accordion 3: Full Solution -->
+        <div class="hint-accordion" id="acc-hint-3">
+          <div class="hint-accordion-header" onclick="toggleAccordion('acc-hint-3', 3)">
+            <div class="hint-badge">
+              <span style="color: #00b8a3;">🎓</span>
+              <span>Hint 3: Complete Textbook Derivation & Solution</span>
+            </div>
+            <span class="hint-accordion-chevron">▼</span>
+          </div>
+          <div class="hint-accordion-body" id="acc-body-3">
+            Click to view full step-by-step derivation and verified option confirmation.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Multiple Choice Arena & Submission Console -->
+  <div class="lc-panel">
+    <div class="lc-panel-header">
+      <span style="font-size: 13px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+        <span>🎯</span> Select Solution Option
+      </span>
+      <span style="font-size: 12px; color: #9ca3af;">Click option to verify</span>
+    </div>
+
+    <div class="lc-panel-body">
+      <!-- Options Container -->
+      <div id="options-container">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Action Footer -->
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button id="btn-next-inline" class="btn" style="flex: 1; background: #ffa116; color: #141414; font-weight: 700;" onclick="nextQuestion()">
+          Next Problem ▶
+        </button>
+      </div>
+
+      <!-- LeetCode Interactive Output Console -->
+      <div id="lc-console" class="lc-console">
+        <div id="lc-verdict" class="lc-verdict-banner lc-verdict-accepted">
+          <span>✓</span> Accepted
+        </div>
+        <div style="font-size: 13px; color: #9ca3af; margin-bottom: 8px;" id="lc-meta-feedback">
+          Runtime: 48ms | Answer Verified
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: #e5e7eb; text-transform: uppercase;">
+          Step-by-Step Breakdown:
+        </div>
+        <div id="lc-explanation-text" class="lc-explanation-box"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/practice.js') }}"></script>
+{% endblock %}

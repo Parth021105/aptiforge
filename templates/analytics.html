@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Performance Analytics — AptiForge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Student Performance Analytics</h2>
+    <p class="page-subtitle">Real-time breakdown of your strengths, topic mastery percentages, and weak areas.</p>
+  </div>
+  <div>
+    <a href="/practice" class="btn">Practice Recommended Topics ⚡</a>
+  </div>
+</div>
+
+<!-- Summary Metric Cards -->
+<div class="grid-4" style="margin-bottom: 32px;">
+  <div class="stat-card">
+    <div class="stat-icon">🎯</div>
+    <div>
+      <div class="stat-value" id="ana-acc">0%</div>
+      <div class="stat-label">Overall Accuracy</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(129, 140, 248, 0.1); color: var(--accent-indigo);">📊</div>
+    <div>
+      <div class="stat-value" id="ana-avg-score">0%</div>
+      <div class="stat-label">Average Exam Score</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(52, 211, 153, 0.1); color: var(--accent-emerald);">📝</div>
+    <div>
+      <div class="stat-value" id="ana-exams">0</div>
+      <div class="stat-label">Exams Completed</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(251, 113, 133, 0.1); color: var(--accent-rose);">⚠️</div>
+    <div>
+      <div class="stat-value" id="ana-weak-cnt">0</div>
+      <div class="stat-label">Weak Topics Detected</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-3" style="margin-bottom: 32px;">
+  <!-- Topic Mastery Breakdown Bars -->
+  <div style="grid-column: span 2;">
+    <div class="card">
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Topic Mastery Breakdown</h3>
+      <div id="topic-bars-container" style="display: flex; flex-direction: column; gap: 20px;">
+        <p class="page-subtitle">Loading performance metrics...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weak Topics Alert & Recommendations Card -->
+  <div>
+    <div class="card" style="background: linear-gradient(135deg, rgba(251, 113, 133, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%); border-color: rgba(251, 113, 133, 0.25);">
+      <h3 style="font-size: 18px; font-weight: 700; color: var(--accent-rose); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span>⚠️</span> Focus Areas
+      </h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+        Topics with accuracy below 65% require dedicated practice to boost your scores:
+      </p>
+
+      <div id="weak-topics-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+        <p style="font-size: 13px; color: var(--text-muted);">No weak topics detected! Keep practicing.</p>
+      </div>
+
+      <a href="/practice" class="btn btn-secondary" style="width: 100%;">Start Targeted Practice ➔</a>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Test History Table -->
+<div class="card">
+  <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Recent Exam History</h3>
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Exam Name</th>
+          <th>Score</th>
+          <th>Correct Answers</th>
+          <th>Time Taken</th>
+          <th>Date</th>
+          <th>Rating</th>
+        </tr>
+      </thead>
+      <tbody id="exam-history-tbody">
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading exam history...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/analytics.js"></script>
+{% endblock %}

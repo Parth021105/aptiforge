@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty & Admin Portal — AptiForge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Faculty & Administrator Command Center</h2>
+    <p class="page-subtitle">Upload question banks, create timed mock exams, and monitor student performance analytics.</p>
+  </div>
+  <div style="display: flex; gap: 12px;">
+    <a href="/admin" class="btn">Manage Question Bank & Exams ⚙️</a>
+    <button class="btn btn-secondary" onclick="seedData()">Seed Sample Question Bank 🌱</button>
+  </div>
+</div>
+
+<!-- Admin Stats Overview -->
+<div class="grid-4" style="margin-bottom: 32px;">
+  <div class="stat-card">
+    <div class="stat-icon">👥</div>
+    <div>
+      <div class="stat-value" id="admin-stat-students">{{ admin_stats.total_students | default(0) }}</div>
+      <div class="stat-label">Registered Students</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan);">📚</div>
+    <div>
+      <div class="stat-value" id="admin-stat-questions">{{ admin_stats.total_questions | default(0) }}</div>
+      <div class="stat-label">Questions in Database</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(129, 140, 248, 0.12); color: var(--accent-indigo);">⏱️</div>
+    <div>
+      <div class="stat-value" id="admin-stat-exams">{{ admin_stats.total_exams | default(0) }}</div>
+      <div class="stat-label">Active Mock Exams</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon" style="background: rgba(52, 211, 153, 0.12); color: var(--accent-emerald);">📊</div>
+    <div>
+      <div class="stat-value" id="admin-stat-attempts">{{ admin_stats.total_attempts | default(0) }}</div>
+      <div class="stat-label">Total Student Submissions</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Action Panels -->
+<div class="grid-2" style="margin-bottom: 32px;">
+  <div class="card">
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">⚡ Question Set Uploader</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+      Upload bulk question sets in JSON or CSV format. Expected CSV format: <code>question, options (pipe-separated |), answer_index, topic, difficulty, explanation</code>.
+    </p>
+    <a href="/admin#upload" class="btn btn-secondary">Upload Question Bank File ➔</a>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">📝 Exam Builder Wizard</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+      Assemble mock aptitude exams, set custom duration limits, select specific question sets, and enable/disable AI hints during test mode.
+    </p>
+    <a href="/admin#create-exam" class="btn btn-secondary">Create New Mock Exam ➔</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function seedData() {
+  if(!confirm("Seed sample question bank into the database?")) return;
+  try {
+    const res = await fetch('/api/seed-sample', {method: 'POST'});
+    const data = await res.json();
+    if(data.ok) {
+      alert("Successfully seeded " + data.inserted + " questions!");
+      location.reload();
+    } else {
+      alert("Seed failed: " + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert("Network error seeding sample questions.");
+  }
+}
+</script>
+{% endblock %}

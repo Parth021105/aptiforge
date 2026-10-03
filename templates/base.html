@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}AptiForge — Online Aptitude Assessment Platform{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header & Navigation -->
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="/dashboard" class="brand">
+          <div class="brand-icon">⚡</div>
+          <h1>AptiForge</h1>
+        </a>
+
+        {% if session.user_id %}
+        <nav class="main-nav">
+          {% if session.role in ['admin', 'faculty'] %}
+            <a href="/admin" class="nav-link {% if request.path == '/admin' %}active{% endif %}">🛡️ Faculty / Admin Portal</a>
+            <a href="/practice" class="nav-link {% if request.path == '/practice' %}active{% endif %}">Practice Portal</a>
+            <a href="/exam" class="nav-link {% if request.path == '/exam' %}active{% endif %}">Mock Exams</a>
+          {% else %}
+            <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="/practice" class="nav-link {% if request.path == '/practice' %}active{% endif %}">Practice</a>
+            <a href="/exam" class="nav-link {% if request.path == '/exam' %}active{% endif %}">Mock Exams</a>
+            <a href="/analytics" class="nav-link {% if request.path == '/analytics' %}active{% endif %}">My Analytics</a>
+          {% endif %}
+        </nav>
+
+        <div class="user-nav">
+          <span class="role-badge {% if session.role in ['admin', 'faculty'] %}admin{% endif %}">
+            {{ session.role | upper if session.role else 'STUDENT' }}
+          </span>
+          <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">{{ session.user_name or session.user_email }}</span>
+          <a href="/logout" class="btn btn-ghost btn-sm">Logout</a>
+        </div>
+        {% else %}
+        <div class="user-nav">
+          <a href="/login" class="btn btn-secondary btn-sm">Sign In</a>
+          <a href="/login?register=1" class="btn btn-sm">Get Started</a>
+        </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      <p>AptiForge Platform &copy; 2026 — AI-Powered Aptitude Practice & Real-Time Assessment System</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

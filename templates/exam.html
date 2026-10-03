@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Mock Exam Center — AptiForge{% endblock %}
+
+{% block content %}
+<!-- View 1: Available Exams Launcher -->
+<div id="exam-launcher-view">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Mock Examination Center</h2>
+      <p class="page-subtitle">Simulate real online placement tests under timed conditions with instant automated scoring.</p>
+    </div>
+  </div>
+
+  <div class="topic-pills" id="exam-category-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 20px;">
+    <button class="topic-pill active" data-category="all">All Placement Tests</button>
+    <button class="topic-pill" data-category="Quantitative">Quantitative Aptitude</button>
+    <button class="topic-pill" data-category="Logical Reasoning">Logical Reasoning</button>
+    <button class="topic-pill" data-category="Verbal Ability">Verbal Ability</button>
+    <button class="topic-pill" data-category="Data Interpretation">Data Interpretation</button>
+  </div>
+
+  <div class="grid-3" id="exams-list-container">
+    <!-- Exam cards loaded dynamically -->
+    <div class="card" style="text-align: center; padding: 40px;">
+      <p class="page-subtitle">Loading mock exams...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Difficulty Level Selection before starting test -->
+<div id="difficulty-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+      <h3 style="font-size: 20px; font-weight: 800; color: #ffffff;">Choose Test Difficulty</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeDifficultyModal()">✕</button>
+    </div>
+    <p style="font-size: 13px; color: var(--text-muted);">
+      Select your preferred difficulty for this 20-minute timed test (20 questions total).
+    </p>
+
+    <div class="difficulty-card-grid">
+      <div class="diff-card selected" data-diff="mixed" onclick="selectDifficulty('mixed')">
+        <div class="diff-card-header">
+          <span class="diff-title">✨ Mixed</span>
+          <span class="badge badge-easy" style="font-size: 10px; padding: 2px 8px;">Recommended</span>
+        </div>
+        <div class="diff-desc">
+          Progressive test: 8 Easy, 8 Medium, and 4 Hard questions.
+        </div>
+      </div>
+
+      <div class="diff-card" data-diff="easy" onclick="selectDifficulty('easy')">
+        <div class="diff-card-header">
+          <span class="diff-title">🟢 Easy</span>
+        </div>
+        <div class="diff-desc">
+          20 foundation questions to build speed, accuracy, and confidence.
+        </div>
+      </div>
+
+      <div class="diff-card" data-diff="medium" onclick="selectDifficulty('medium')">
+        <div class="diff-card-header">
+          <span class="diff-title">🟡 Medium</span>
+        </div>
+        <div class="diff-desc">
+          20 standard placement questions matching campus recruitment tests.
+        </div>
+      </div>
+
+      <div class="diff-card" data-diff="hard" onclick="selectDifficulty('hard')">
+        <div class="diff-card-header">
+          <span class="diff-title">🔴 Hard</span>
+        </div>
+        <div class="diff-desc">
+          20 challenging industry questions designed for top tech screening.
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+      <button class="btn btn-secondary" onclick="closeDifficultyModal()">Cancel</button>
+      <button class="btn" id="btn-confirm-start-exam" onclick="confirmLaunchExam()">Start Timed Test ➔</button>
+    </div>
+  </div>
+</div>
+
+<!-- View 2: Active Timed Exam Interface -->
+<div id="active-exam-view" style="display: none;">
+  <!-- Exam Header with Timer -->
+  <div class="exam-header-bar">
+    <div>
+      <h3 style="font-size: 20px; font-weight: 700;" id="active-exam-title">Mock Aptitude Test</h3>
+      <p style="font-size: 13px; color: var(--text-muted);" id="active-exam-meta">20-Minute Timed Assessment • 20 Questions</p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div class="timer-box" id="timer-box">
+        <span>⏱️</span>
+        <span id="timer-display">20:00</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="confirmSubmitExam()">Submit Test ➔</button>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <!-- Question Display Box -->
+    <div style="grid-column: span 2;">
+      <div class="question-box">
+        <div class="question-meta">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="badge badge-medium" id="exam-q-topic">Quantitative</span>
+            <span class="badge badge-hard" id="exam-q-diff">MEDIUM</span>
+          </div>
+          <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);" id="exam-q-counter">Question 1 of 20</span>
+        </div>
+
+        <div class="question-title" id="exam-q-text">Loading question...</div>
+
+        <div class="options-container" id="exam-options-container">
+          <!-- Dynamic options -->
+        </div>
+
+        <!-- Structured 3-Level Hint Drawer -->
+        <div id="exam-hint-section" style="display: none; margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+              <span>✨</span> Progressive Hints:
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="fetchExamHint(1)">Level 1 – Basic Hint</button>
+              <button class="btn btn-secondary btn-sm" onclick="fetchExamHint(2)">Level 2 – Detailed Hint</button>
+              <button class="btn btn-secondary btn-sm" onclick="fetchExamHint(3)">Level 3 – Solution</button>
+            </div>
+          </div>
+          <div id="exam-hint-drawer" class="hint-drawer" style="display: none; margin-top: 14px;">
+            <div class="hint-header">
+              <span id="exam-hint-level-title">✨ Hint</span>
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('exam-hint-drawer').style.display='none'">✕ Close</button>
+            </div>
+            <div id="exam-hint-content" style="white-space: pre-line;"></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px; display: flex; align-items: center; justify-content: space-between;">
+          <button class="btn btn-secondary" id="exam-btn-prev" onclick="examPrevQ()" disabled>← Previous</button>
+          <button class="btn btn-ghost" onclick="clearExamChoice()">Clear Choice</button>
+          <button class="btn" id="exam-btn-next" onclick="examNextQ()">Next Question ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar Question Navigator Palette -->
+    <div>
+      <div class="card">
+        <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">Question Navigator</h4>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Green = Answered, Blue = Current</p>
+
+        <div class="question-palette" id="question-palette">
+          <!-- Dynamic palette buttons -->
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+          <button class="btn btn-danger" style="width: 100%;" onclick="confirmSubmitExam()">Submit Final Exam</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View 3: Exam Score & Detailed Report Breakdown -->
+<div id="exam-results-view" style="display: none;">
+  <div class="card" style="text-align: center; max-width: 780px; margin: 0 auto 32px auto; padding: 36px;">
+    <div style="font-size: 48px; margin-bottom: 8px;" id="result-emoji">🎉</div>
+    <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 4px;" id="result-title">Exam Complete!</h2>
+    <p style="font-size: 14px; color: var(--text-muted);" id="result-exam-name">Mock Aptitude Test</p>
+
+    <div style="font-size: 64px; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 20px 0;" id="result-score-val">
+      85%
+    </div>
+
+    <div class="grid-3" style="max-width: 500px; margin: 0 auto 28px auto;">
+      <div style="background: rgba(7, 11, 20, 0.6); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+        <div style="font-size: 18px; font-weight: 700; color: var(--accent-emerald);" id="result-correct-cnt">8 / 10</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Correct Answers</div>
+      </div>
+      <div style="background: rgba(7, 11, 20, 0.6); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+        <div style="font-size: 18px; font-weight: 700; color: var(--accent-cyan);" id="result-time-taken">12m 45s</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Time Spent</div>
+      </div>
+      <div style="background: rgba(7, 11, 20, 0.6); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+        <div style="font-size: 18px; font-weight: 700; color: var(--accent-indigo);" id="result-rating">GOOD</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Performance</div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <a href="/analytics" class="btn">View Full Analytics 📊</a>
+      <button class="btn btn-secondary" onclick="resetToExamsList()">Back to Exam Center</button>
+    </div>
+  </div>
+
+  <!-- Question-by-Question Review -->
+  <div class="card" style="max-width: 960px; margin: 0 auto;">
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Detailed Question Breakdown</h3>
+    <div id="breakdown-list" style="display: flex; flex-direction: column; gap: 16px;">
+      <!-- Detailed items loaded dynamically -->
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/exam.js"></script>
+{% endblock %}

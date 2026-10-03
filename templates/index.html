@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}AptiForge — Aptitude Practice & Assessment Platform{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 50px 20px 30px 20px; max-width: 900px; margin: 0 auto;">
+
+  <h1 style="font-size: 42px; font-weight: 800; line-height: 1.25; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px;">
+    Master Aptitude Tests with Real-Time AI Assistance
+  </h1>
+
+  <p class="page-subtitle" style="font-size: 17px; max-width: 680px; margin: 0 auto 32px auto; line-height: 1.6;">
+    Instant zero-reload answer checking, 3-level progressive AI hint generation, timed mock test simulations, and faculty question management portal.
+  </p>
+
+  <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 48px;">
+    <a href="/login" class="btn" style="padding: 14px 28px; font-size: 15px;">Sign In to Portal ➔</a>
+    <a href="/login?register=1" class="btn btn-secondary" style="padding: 14px 28px; font-size: 15px;">Create Free Account</a>
+  </div>
+
+  <!-- Highlights Grid -->
+  <div class="grid-3" style="text-align: left;">
+    <div class="card">
+      <div style="font-size: 28px; margin-bottom: 10px;">⚡</div>
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Instant Answer Validation</h3>
+      <p style="font-size: 13px; color: var(--text-muted);">Real-time AJAX option verification with green/red feedback and step-by-step solution breakdowns.</p>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 28px; margin-bottom: 10px;">✨</div>
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">3-Level Progressive AI Hints</h3>
+      <p style="font-size: 13px; color: var(--text-muted);">Request Concept Formulas (Level 1), Problem Setup (Level 2), or Clues (Level 3) without spoiling the answer.</p>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 28px; margin-bottom: 10px;">📂</div>
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Faculty Upload & Exams</h3>
+      <p style="font-size: 13px; color: var(--text-muted);">Upload question banks via JSON/CSV files, build mock tests, and review student performance rosters.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
