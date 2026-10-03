@@ -120,6 +120,10 @@ def create_app():
         admin_stats = models.admin_analytics_summary()
         return render_template('admin.html', admin_stats=admin_stats)
 
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return f"404: Path: {request.path} | Environ PATH_INFO: {request.environ.get('PATH_INFO')}", 404
+
     # --- API Endpoints ---
     @app.route('/api/register', methods=['POST'])
     def api_register():
